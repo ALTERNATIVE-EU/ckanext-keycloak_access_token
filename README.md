@@ -1,123 +1,31 @@
-[![Tests](https://github.com//ckanext-keycloak_access_token/workflows/Tests/badge.svg?branch=main)](https://github.com//ckanext-keycloak_access_token/actions)
-
 # ckanext-keycloak_access_token
 
-**TODO:** Put a description of your extension here:  What does it do? What features does it have? Consider including some screenshots or embedding a video!
+CKAN extension that adds additional fields to dataset metadata, such as size and experiment info.
 
+## Setup
 
-## Requirements
+1. Install <a href="https://docs.ckan.org/en/2.9/extensions/tutorial.html#installing-ckan" target="_blank">CKAN</a>
 
-**TODO:** For example, you might want to mention here which versions of CKAN this
-extension works with.
+2. Clone the repository in the `src` dir (usually located in `/usr/lib/ckan/default/src`)
+    ```
+    cd /usr/lib/ckan/default/src
+    git clone https://github.com/ALTERNATIVE-EU/ckanext-keycloak_access_token.git
+    ```
 
-If your extension works across different versions you can add the following table:
+3. Build the extension
+    ```
+    . /usr/lib/ckan/default/bin/activate
+    cd /usr/lib/ckan/default/src/ckanext-keycloak_access_token
+    sudo python3 setup.py develop
+    ```
 
-Compatibility with core CKAN versions:
+4. Add the extension to your list of plugins in the ckan config file (usually `/etc/ckan/default/ckan.ini`)
+   ```
+   ckan.plugins = stats text_view recline_view keycloak_access_token
+   ```
 
-| CKAN version    | Compatible?   |
-| --------------- | ------------- |
-| 2.6 and earlier | not tested    |
-| 2.7             | not tested    |
-| 2.8             | not tested    |
-| 2.9             | not tested    |
-
-Suggested values:
-
-* "yes"
-* "not tested" - I can't think of a reason why it wouldn't work
-* "not yet" - there is an intention to get it working
-* "no"
-
-
-## Installation
-
-**TODO:** Add any additional install steps to the list below.
-   For example installing any non-Python dependencies or adding any required
-   config settings.
-
-To install ckanext-keycloak_access_token:
-
-1. Activate your CKAN virtual environment, for example:
-
-     . /usr/lib/ckan/default/bin/activate
-
-2. Clone the source and install it on the virtualenv
-
-    git clone https://github.com//ckanext-keycloak_access_token.git
-    cd ckanext-keycloak_access_token
-    pip install -e .
-	pip install -r requirements.txt
-
-3. Add `keycloak_access_token` to the `ckan.plugins` setting in your CKAN
-   config file (by default the config file is located at
-   `/etc/ckan/default/ckan.ini`).
-
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
-
-     sudo service apache2 reload
-
-
-## Config settings
-
-None at present
-
-**TODO:** Document any optional config settings here. For example:
-
-	# The minimum number of hours to wait before re-checking a resource
-	# (optional, default: 24).
-	ckanext.keycloak_access_token.some_setting = some_default_value
-
-
-## Developer installation
-
-To install ckanext-keycloak_access_token for development, activate your CKAN virtualenv and
-do:
-
-    git clone https://github.com//ckanext-keycloak_access_token.git
-    cd ckanext-keycloak_access_token
-    python setup.py develop
-    pip install -r dev-requirements.txt
-
-
-## Tests
-
-To run the tests, do:
-
-    pytest --ckan-ini=test.ini
-
-
-## Releasing a new version of ckanext-keycloak_access_token
-
-If ckanext-keycloak_access_token should be available on PyPI you can follow these steps to publish a new version:
-
-1. Update the version number in the `setup.py` file. See [PEP 440](http://legacy.python.org/dev/peps/pep-0440/#public-version-identifiers) for how to choose version numbers.
-
-2. Make sure you have the latest version of necessary packages:
-
-    pip install --upgrade setuptools wheel twine
-
-3. Create a source and binary distributions of the new version:
-
-       python setup.py sdist bdist_wheel && twine check dist/*
-
-   Fix any errors you get.
-
-4. Upload the source distribution to PyPI:
-
-       twine upload dist/*
-
-5. Commit any outstanding changes:
-
-       git commit -a
-       git push
-
-6. Tag the new release of the project on GitHub with the version number from
-   the `setup.py` file. For example if the version number in `setup.py` is
-   0.0.1 then do:
-
-       git tag 0.0.1
-       git push --tags
-
-## License
-
-[AGPL](https://www.gnu.org/licenses/agpl-3.0.en.html)
+5. Start CKAN
+   ```
+   . /usr/lib/ckan/default/bin/activate
+   sudo ckan -c /etc/ckan/default/ckan.ini run
+   ```

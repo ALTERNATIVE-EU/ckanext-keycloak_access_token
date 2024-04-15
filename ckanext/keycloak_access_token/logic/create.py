@@ -1,21 +1,23 @@
 from __future__ import annotations
-import datetime
 
+import datetime
 import logging
 
-import ckan.logic as logic
+import ckan.lib.api_token as api_token
+import ckan.lib.datapreview
 import ckan.lib.dictization
-import ckan.logic.validators
+import ckan.lib.navl.dictization_functions as dictization_functions
+import ckan.logic as logic
 import ckan.logic.action
 import ckan.logic.schema
-import ckan.lib.navl.dictization_functions
-import ckan.lib.datapreview
-import ckan.lib.api_token as api_token
-import jwt
-import requests
+import ckan.logic.validators
 import ckan.model
+import ckan.plugins.toolkit as toolkit
 import ckanext.keycloak_access_token.db.access_token as db
-from ckan.common import _, request, config
+import requests
+
+from ckan.common import _, config, request
+from jose import jwt
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +36,7 @@ def exchange_token(
     realm_name,
     audience,
     scopes="offline_access",
-):
+    ):
     """
     Exchange a token for a different token using Keycloak's Token Exchange feature.
 
@@ -87,24 +89,47 @@ def access_token_create(context, data_dict):
     if not schema:
         schema = api_token.get_schema()
 
-    validated_data_dict, errors = _validate(data_dict, schema, context)
+    _, errors = _validate(data_dict, schema, context)
 
     if errors:
         raise ValidationError(errors)
 
-    # Get the token from the cookies
+    # Get the token
+    session_id = toolkit.request.cookies.get("session_id")
+    if not session_id:
+        raise Exception(u"Session ID missing")
+    
+    get_user_session = toolkit.get_action("get_user_session")
+    data_dict = logic.clean_dict(
+        dictization_functions.unflatten(
+            logic.tuplize_dict(logic.parse_params(request.form))))
+
+    data_dict[u'session_id'] = session_id
+    user_session = get_user_session(context, data_dict)[u'user_session']
+    if not user_session:
+        return None
+    
+    if user_session and user_session.jwttokens:
+        access_token = user_session.jwttokens.access_token
+        
+    if not access_token:
+        raise Exception(u"Access token missing")
 
     token_obj = exchange_token(
         keycloak_url=config.get('ckanext.keycloak.server_url'),
         client_id=config.get("ckanext.keycloak.client_id"),
         client_secret=config.get("ckanext.keycloak.client_secret_key"),
-        original_token=request.cookies.get("jwt_access_token"),
+        original_token=access_token,
         realm_name=config.get("ckanext.keycloak.realm"),
         audience=config.get('ckanext.keycloak.ai_ml_api_client_id'),
     )
 
-    # parse the token
-    parsed_token = jwt.decode(str(token_obj).encode("utf-8"), verify=False)
+    server_url = config.get("ckanext.keycloak.server_url")
+    realm = config.get("ckanext.keycloak.realm")
+    
+    secret_key = fetch_secret_key(f"{server_url}/realms/{realm}/protocol/openid-connect/certs")
+
+    parsed_token = jwt.decode(token_obj, secret_key, options={"verify_aud": False})
 
     if token_obj is None:
         raise ValidationError("Token exchange failed")
@@ -126,3 +151,11 @@ def access_token_create(context, data_dict):
     result = api_token.add_extra({"token": token_obj})
 
     return result
+
+def fetch_secret_key(url):
+    response = requests.get(url, verify=True)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception("Failed to fetch secret key")
+    

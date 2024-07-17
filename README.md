@@ -1,6 +1,6 @@
 # ckanext-keycloak_access_token
 
-CKAN extension that adds additional fields to dataset metadata, such as size and experiment info.
+CKAN extension that adds UI for access token token management
 
 ## Setup
 

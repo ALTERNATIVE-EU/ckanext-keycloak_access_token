@@ -55,7 +55,8 @@ def get(id, data=None, errors=None, error_summary=None):
         u'id': id,
         u'user_obj': g.userobj,
         u'include_datasets': True,
-        u'include_num_followers': True
+        u'include_num_followers': True,
+        u'include_plugin_extras': True
     }
 
     extra_vars = _extra_template_variables(context, data_dict)
